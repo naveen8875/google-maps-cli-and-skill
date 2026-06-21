@@ -1,35 +1,51 @@
+<div align="center">
+
 # Google Maps CLI
 
-> A repeatable Google Maps scraping CLI for Codex, Claude Code, and human operators.
+**Agent-ready Google Maps scraping with tracked request workspaces, resumable runs, proxy-aware execution, and structured CSV exports.**
 
-`google-maps-cli` turns ad hoc scraping requests into tracked workspaces, structured job files, resumable runs, and CSV outputs that another agent can inspect or deliver.
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](#install)
+[![CLI](https://img.shields.io/badge/interface-CLI-111111)](#cli-commands)
+[![Status](https://img.shields.io/badge/status-working%20prototype-0A7F5A)](#what-you-get)
+[![Tests](https://img.shields.io/badge/tests-7%20passing-1F6FEB)](#testing)
+
+</div>
+
+---
 
 ## Start With An Agent
 
-If you want Codex or Claude Code to take it from zero, give it the repo link and this prompt:
+If you want Codex or Claude Code to handle setup and execution, give it the repo link and this prompt:
 
 ```text
 Here’s the repo: https://github.com/naveen8875/google-maps-cli-and-skill.git
 Please clone it, read STARTUP.md, set it up locally, and help me run a scrape request.
 ```
 
-The repo includes a dedicated onboarding file at [STARTUP.md](STARTUP.md) so the agent knows how to:
+That onboarding flow is documented in [STARTUP.md](STARTUP.md).
+
+It tells the agent how to:
 
 - clone the repo if needed
-- install local dependencies
+- install dependencies locally
 - validate the environment
-- start a tracked scrape request
+- bootstrap a tracked request workspace
+- run or resume a scrape
 - return the CSV, checkpoint, and manifest paths
 
-If the repo is already open locally, a shorter prompt works too:
+If the repo is already open locally, this shorter prompt works too:
 
 ```text
 Read STARTUP.md and follow it. Help me set up this repo and run a Google Maps scrape request.
 ```
 
-## Why This Exists
+## What This Repo Does
 
-Instead of asking an agent to improvise a browser workflow every time, this repo gives it a stable execution surface:
+`google-maps-cli` turns ad hoc Google Maps scraping requests into a repeatable workflow:
+
+**Prompt -> Request -> Job -> Run -> CSV**
+
+Instead of asking an agent to improvise browser steps every time, this repo gives it a stable execution surface:
 
 - guided request intake with `gmaps request start`
 - reproducible YAML job files
@@ -48,9 +64,9 @@ Instead of asking an agent to improvise a browser workflow every time, this repo
 | Output | CSV rows with title, rating, category, address, hours, sponsorship, and source URL |
 | Agent Support | Codex skill docs for setup, recovery, and artifact inspection |
 
-## Fastest Way To Start
+## Quick Start
 
-Install the package:
+### 1. Install
 
 ```bash
 python3 -m venv .venv
@@ -58,25 +74,32 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Then use the guided request bootstrap:
+### 2. Validate The Machine
+
+```bash
+gmaps doctor
+```
+
+### 3. Start A Tracked Request
 
 ```bash
 gmaps request start
 ```
 
-If you are using an agent, prefer the `STARTUP.md` flow instead of skipping straight to manual commands.
-
-That command will:
+That guided flow will:
 
 1. ask for the request name and source note
-2. ask for the search queries
-3. ask how proxies should work
-4. generate a tracked workspace under `workspace/requests/<slug>/`
+2. ask for one or more search queries
+3. ask how proxy handling should work
+4. create a private request workspace
 5. optionally start the scrape immediately
+
+> [!TIP]
+> If you are using an AI agent, prefer the `STARTUP.md` flow instead of jumping straight to manual commands.
 
 ## Request Workspace
 
-Every guided request gets its own private operator folder:
+Every guided request gets its own local operator folder:
 
 ```text
 workspace/requests/<request-slug>/
@@ -90,7 +113,7 @@ workspace/requests/<request-slug>/
         └── run.json
 ```
 
-`REQUEST.md` is meant to be the place where an operator or agent tracks:
+`REQUEST.md` is where the operator or agent should track:
 
 - where the request came from
 - which queries were used
@@ -98,33 +121,33 @@ workspace/requests/<request-slug>/
 - what still needs follow-up
 - what was delivered back to the user
 
-The generated workspace is intentionally private and local. It is ignored by git through `workspace/`.
+The generated workspace is intentionally private and local. `workspace/` is ignored by git.
 
 ## Core Workflow
 
-### 1. Guided intake
+### Guided Intake
 
 ```bash
 gmaps request start
 ```
 
-### 2. Validate the machine
-
-```bash
-gmaps doctor
-```
-
-### 3. Check proxy resolution
+### Validate Proxy Resolution
 
 ```bash
 gmaps proxies resolve workspace/requests/<request-slug>/job.yaml
 ```
 
-### 4. Run or resume
+### Run
 
 ```bash
 gmaps scrape run workspace/requests/<request-slug>/job.yaml
-gmaps scrape run workspace/requests/<request-slug>/job.yaml --resume-from workspace/requests/<request-slug>/runs/<run-id>
+```
+
+### Resume
+
+```bash
+gmaps scrape run workspace/requests/<request-slug>/job.yaml \
+  --resume-from workspace/requests/<request-slug>/runs/<run-id>
 ```
 
 ## CLI Commands
@@ -139,20 +162,27 @@ gmaps scrape run workspace/requests/<request-slug>/job.yaml --resume-from worksp
 
 ## Proxy Modes
 
-Use env mode when you want the request workspace to carry a local env helper:
+Use env mode when you want the request workspace to carry a local env helper.
+
+Start from the root template:
 
 ```bash
 cp .env.example .env
+```
+
+Use the shipped env-mode example:
+
+```bash
 gmaps scrape run examples/jobs/proxy-env.yaml
 ```
 
-Supported today:
+### Supported Today
 
 - `direct`
 - `env` via `HTTP_PROXY`, `HTTPS_PROXY`, or `ALL_PROXY`
 - static unauthenticated `http`, `https`, `socks4`, and `socks5` proxy URLs
 
-Current limits:
+### Current Limits
 
 - no automatic browser auth for `http://user:pass@host:port`
 - no parallel workers yet
@@ -184,21 +214,42 @@ Current CSV rows can include:
 | [examples/jobs/batch-resume.yaml](examples/jobs/batch-resume.yaml) | Multi-query resumable batch |
 | [examples/jobs/proxy-env.yaml](examples/jobs/proxy-env.yaml) | Env-backed proxy setup |
 
+<details>
+<summary><strong>Manual Job Mode</strong></summary>
+
+If you want to skip the guided request flow and create a job directly:
+
+```bash
+gmaps job init workspace/requests/demo/job.yaml \
+  --name demo \
+  --query "dentists in Austin TX" \
+  --query "orthodontists in Austin TX"
+```
+
+Then run it:
+
+```bash
+gmaps scrape run workspace/requests/demo/job.yaml
+```
+
+</details>
+
 ## Repo Layout
 
 ```text
 .
-├── src/gmaps_cli/                # installable Python package
-│   ├── browser/                  # backend adapters
-│   ├── google_maps/              # selenium scraper internals
-│   ├── proxies/                  # proxy resolution
-│   ├── export/                   # CSV export helpers
-│   ├── request_bootstrap.py      # guided request workspace generator
-│   └── checkpoints.py            # resumable run helpers
-├── examples/jobs/                # shipped example job files
-├── skills/google-maps-scrape/    # Codex skill for this CLI
-├── tests/                        # offline tests
-└── .env.example                  # proxy env template
+├── STARTUP.md                   # agent onboarding entrypoint
+├── src/gmaps_cli/               # installable Python package
+│   ├── browser/                 # backend adapters
+│   ├── google_maps/             # selenium scraper internals
+│   ├── proxies/                 # proxy resolution
+│   ├── export/                  # CSV export helpers
+│   ├── request_bootstrap.py     # guided request workspace generator
+│   └── checkpoints.py           # resumable run helpers
+├── examples/jobs/               # shipped example job files
+├── skills/google-maps-scrape/   # Codex skill for this CLI
+├── tests/                       # offline tests
+└── .env.example                 # proxy env template
 ```
 
 ## Codex Skill
