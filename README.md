@@ -9,7 +9,7 @@
 If you want Codex or Claude Code to take it from zero, give it the repo link and this prompt:
 
 ```text
-Here’s the repo: <github-link>
+Here’s the repo: https://github.com/naveen8875/google-maps-cli-and-skill.git
 Please clone it, read STARTUP.md, set it up locally, and help me run a scrape request.
 ```
 
