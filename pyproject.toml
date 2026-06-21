@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "google-maps-cli"
+version = "0.1.0"
+description = "Job-driven Google Maps scraping CLI with resumable batches, proxy support, and a Codex skill."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["google-maps", "scraper", "cli", "selenium", "codex"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "click>=8.1",
+  "pydantic>=2.8",
+  "PyYAML>=6.0",
+  "selenium>=4.20",
+  "webdriver-manager>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+gmaps = "gmaps_cli.cli:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

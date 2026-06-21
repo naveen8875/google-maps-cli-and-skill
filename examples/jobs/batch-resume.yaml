@@ -1,0 +1,27 @@
+name: austin-batch-resume
+seeds:
+  - query: dentists in Austin TX
+    region: Austin, Texas
+    full_scroll: true
+    max_results: 25
+  - query: orthodontists in Austin TX
+    region: Austin, Texas
+    full_scroll: true
+    max_results: 25
+  - query: coffee in Austin TX
+    region: Austin, Texas
+    full_scroll: true
+    max_results: 25
+browser:
+  backend: selenium
+  headless: true
+proxy:
+  mode: direct
+output:
+  directory: runs
+  filename: austin-batch-resume.csv
+  checkpoint_filename: checkpoint.json
+  write_manifest: true
+options:
+  dedupe_by: url
+  continue_on_error: true

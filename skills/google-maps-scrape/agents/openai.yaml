@@ -1,0 +1,4 @@
+interface:
+  display_name: "Google Maps Scrape"
+  short_description: "Run repeatable Google Maps scrape jobs"
+  default_prompt: "Use $google-maps-scrape to prepare a job file and run the gmaps CLI to export a CSV."

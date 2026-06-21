@@ -1,0 +1,19 @@
+name: austin-dentists-proxy-env
+seeds:
+  - query: dentists in Austin TX
+    region: Austin, Texas
+    full_scroll: true
+    max_results: 25
+browser:
+  backend: selenium
+  headless: true
+proxy:
+  mode: env
+output:
+  directory: runs
+  filename: austin-dentists-proxy-env.csv
+  checkpoint_filename: checkpoint.json
+  write_manifest: true
+options:
+  dedupe_by: url
+  continue_on_error: false
